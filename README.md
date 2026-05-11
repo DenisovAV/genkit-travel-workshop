@@ -14,13 +14,12 @@ You are on branch **`step-03-multimodal`**. Module 3 is done — the flow now ac
 
 ## What changed since step 02
 
-1. Input schema now has an **optional `landmarkPhoto`** — a base64 data URL.
-2. The prompt is built as **parts** instead of a single string. When a photo is present:
-   ```ts
-   [{ media: { url: dataUrl } }, { text: "The image above is a landmark..." }]
-   ```
-   **Media part goes first.** Google's own samples do it that way — the text instructions then "refer back" to the image. Reversing the order weakens grounding on the image.
-3. `output: { ..., format: 'json', constrained: true }` — schema-aware decoding stays stable when vision is combined with tools. Without `constrained: true`, Flash sometimes returns malformed JSON.
+1. Input schema now has an **optional `landmarkPhoto`** — a base64 data URL string (format `data:image/jpeg;base64,…`). The Dev UI's file-upload widget produces exactly this format, so no manual encoding is needed.
+2. The prompt is built as an **array of parts** instead of a single string, so we can mix text and media. There are two branches:
+   - **With photo:** `[{ media: { url } }, { text: "The image above is a landmark…" }]`
+   - **Without photo:** `[{ text: "Plan a {days}-day trip…" }]`
+3. **Media part goes first.** Google's own samples do it that way — the text instructions then "refer back" to the image ("the image above"). Reversing the order weakens grounding on the image.
+4. `format: 'json', constrained: true` (carried over from step 02) becomes even more important here — vision + tools + schema in one call is a JSON-stability stress test for Flash models. Constrained decoding keeps the output parseable.
 
 ## Try it now
 
