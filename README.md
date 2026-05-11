@@ -68,8 +68,6 @@ Each module has a self-contained doc in [`docs/`](./docs/). Follow them in order
 4. [03 — Multimodal input](docs/03-multimodal.md)
 5. [04 — RAG with local vector store](docs/04-rag.md)
 
-Presenting the workshop? See [docs/slides-prompts.md](docs/slides-prompts.md) — a copy-paste prompt deck for generating slide visuals with Nano Banana / Imagen.
-
 If you fall behind, every module doc ends with the **full file state** at that checkpoint — copy it into `src/index.ts` and you are back on track.
 
 ## Repo layout
