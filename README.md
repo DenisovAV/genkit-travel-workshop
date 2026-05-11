@@ -14,10 +14,11 @@ You are on branch **`step-04-rag`** — identical to `main`. Module 4 is done; t
 
 ## What changed since step 03
 
-1. **`devLocalVectorstore`** plugin registered with `gemini-embedding-001` as the embedder. Stores embeddings in a local file (`__db_cityGuides.json`, gitignored).
-2. **`indexCityGuides`** — a separate flow that chunks `src/data/*.md` by blank lines and writes them to the local index. Run it once per session.
-3. `planTripFlow` now does `ai.retrieve` before `ai.generate` and passes the retrieved chunks as the `docs` parameter — Genkit injects them into the prompt with the right framing.
-4. The system prompt tells the model to **prefer the guides** over its general knowledge and to admit ignorance when something is not in them.
+1. **`devLocalVectorstore`** plugin added to `genkit({ plugins: [...] })` with `googleAI.embedder('gemini-embedding-001')` as the embedder. Embeddings are persisted to **`__db_cityGuides.json`** in the repo root (gitignored). That file *is* the local vector store — delete it to reset.
+2. Two refs exported: `cityGuidesIndexer` and `cityGuidesRetriever`, both pointing to the same `'cityGuides'` index.
+3. **`indexCityGuides`** — a *separate* flow that reads every `*.md` file under `src/data/`, splits on blank lines, wraps chunks as `Document.fromText(chunk, { source: filename })`, and calls `ai.index({ indexer, documents })`. **Run it once before running `planTripFlow`**, otherwise the retriever returns nothing and the trip plan loses RAG context.
+4. `planTripFlow` now calls **`ai.retrieve({ retriever: cityGuidesRetriever, query, options: { k: 4 } })`** before `ai.generate`, and passes the result as the **`docs:`** parameter of `ai.generate`. Genkit injects those docs into the prompt with the right framing automatically — you do not concatenate them by hand.
+5. A new **`system:`** prompt tells the model to prefer the guides over its general knowledge and admit ignorance when a fact is not in them. Without this, the model often defaults to its training data.
 
 ## Try it now
 
@@ -25,9 +26,9 @@ You are on branch **`step-04-rag`** — identical to `main`. Module 4 is done; t
 npm run dev
 ```
 
-**Step 1 — populate the index** (one time per session):
+**Step 1 — populate the index** (REQUIRED before step 2):
 
-In the Dev UI, open `indexCityGuides`, run with input `null`. Expect `{ "count": 38 }` or so.
+In the Dev UI, open `indexCityGuides`, run it with input `{}` (the schema is `z.void()`, the Dev UI accepts empty object). Expect `{ "count": 38 }` or so. If you skip this step, the retriever finds nothing and the trip plan reverts to step-03 behaviour.
 
 **Step 2 — run the full planner:**
 
