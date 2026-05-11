@@ -1,101 +1,66 @@
-# Genkit Travel Workshop
+# Genkit Travel Workshop — Step 00: Starter
 
-Build a Travel Planner with [Firebase Genkit](https://genkit.dev) in 2 hours.
-One growing flow — `planTripFlow` — picks up a new Genkit capability every module:
+You are on branch **`step-00-starter`**. This is the empty starting point for the 2-hour workshop. Verify your setup here, then we move to module 1.
 
-| Module | Capability | Added to `planTripFlow` |
-|-------:|------------|-------------------------|
-| 0 | Setup | Hello-flow + Dev UI tour |
-| 1 | Inference | `ai.generate` with a Zod output schema |
-| 2 | Tool calling | `getWeather`, `searchFlights` (mocked) |
-| 3 | Multimodal | Photo of a landmark → highlight |
-| 4 | RAG | Index local Markdown guides, augment with `docs` |
+## Branch map
 
-Total: ~120 min, including ~10 min Q&A.
+| Branch | After module |
+|--------|--------------|
+| **`step-00-starter`** ← you are here | (setup only) |
+| `step-01-inference` | 1 — Zod structured output |
+| `step-02-tools` | 2 — tool calling |
+| `step-03-multimodal` | 3 — image input |
+| `step-04-rag` / `main` | 4 — RAG (final state) |
 
-## How to use this repo during the workshop
+`git checkout step-NN-<name>` to jump to any checkpoint.
 
-`main` holds the **finished** version. To follow along, start from the empty starter and switch branches as we go:
-
-```bash
-git checkout step-00-starter   # before we begin
-git checkout step-01-inference # after module 1
-git checkout step-02-tools     # after module 2
-git checkout step-03-multimodal # after module 3
-git checkout step-04-rag       # = main (final)
-```
-
-Every branch carries a step-specific `README.md` that tells you exactly what to do, paste, and run for that module. If you fall behind at any point, just `git checkout step-NN-<name>` and you are caught up.
-
-## Prerequisites
-
-- **Node.js 20+**
-- A **free** Gemini API key — get one at <https://aistudio.google.com/apikey>
-- An editor with TypeScript support
-
-## Setup
+## Setup checklist
 
 ```bash
-# 1. Project deps (Genkit CLI is bundled as a devDependency)
+# 1. Install deps (Genkit CLI is bundled as a devDependency)
 npm install
 
 # 2. API key
 cp .env.example .env
-# then paste your GEMINI_API_KEY into .env
+# paste your GEMINI_API_KEY  — get one at https://aistudio.google.com/apikey
 
-# 3. Start the dev server + Dev UI
+# 3. Start Dev UI
 npm run dev
+# → http://localhost:4000
 ```
 
-> Optional: `npm install -g genkit-cli` to get the `genkit` command available everywhere — handy outside this project.
+## Verify it works
 
-The Developer UI opens at **<http://localhost:4000>**. The flow auto-reloads on file changes (`tsx --watch`).
+In the Dev UI, open `planTripFlow` and run with:
 
-## Walkthrough
+```json
+{ "destination": "Lisbon" }
+```
 
-Each module has a self-contained doc in [`docs/`](./docs/). Follow them in order:
+You should get a greeting string back, and a single `generate` span in **Traces**. If both work, you are ready for module 1.
 
-1. [00 — Setup & Dev UI tour](docs/00-setup.md)
-2. [01 — Inference & structured output](docs/01-inference.md)
+## What is in `src/index.ts` right now
+
+Three things, no more:
+
+1. `genkit({...})` — the factory that wires the Google AI plugin and sets `gemini-flash-latest` as the default model.
+2. `ai.defineFlow` — wraps a function so the Dev UI can call it.
+3. `ai.generate` — the single inference primitive.
+
+## Full step-by-step docs
+
+Each module also has a long-form write-up under [`docs/`](./docs/):
+
+1. [00 — Setup & Dev UI tour](docs/00-setup.md) ← read this now
+2. [01 — Inference](docs/01-inference.md)
 3. [02 — Tool calling](docs/02-tools.md)
 4. [03 — Multimodal input](docs/03-multimodal.md)
-5. [04 — RAG with local vector store](docs/04-rag.md)
-
-If you fall behind, every module doc ends with the **full file state** at that checkpoint — copy it into `src/index.ts` and you are back on track.
-
-## Repo layout
-
-```
-.
-├── README.md                  ← you are here
-├── package.json               ← all Genkit deps on "latest"
-├── tsconfig.json
-├── .env.example
-├── src/
-│   ├── index.ts               ← the only source file we touch
-│   └── data/
-│       ├── lisbon.md          ← guides for RAG (module 4)
-│       ├── barcelona.md
-│       └── sagrada-familia.jpg← landmark photo for multimodal (module 3)
-└── docs/                      ← step-by-step module instructions
-```
+5. [04 — RAG](docs/04-rag.md)
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|
-| `genkit: command not found` | `npm install -g genkit-cli`, then restart your shell |
-| Dev UI does not open at `:4000` | Port already in use — `lsof -i :4000`; or open it manually in the browser |
-| `GoogleGenerativeAIFetchError: API key not valid` | `.env` not loaded — restart `npm run dev`; verify `GEMINI_API_KEY` value |
-| Module 4: `embedding quota exceeded` | Swap the embedder to `googleAI.embedder('text-embedding-004')` |
-| Module 4: stale index after editing guides | Stop the server, `rm -rf .genkit`, restart and re-run `indexCityGuides` |
-| Tool loop never terminates | Already guarded by `maxTurns: 5`; if you remove it, expect 10+ tool calls in pathological prompts |
-
-## What we are NOT covering (links to read later)
-
-- Deployment (`startFlowServer`, Cloud Run, Firebase Functions)
-- `.prompt` files for promptfile-based prompt management
-- Evaluation framework (`ai.evaluate`)
-- Multi-agent orchestration
-
-Full docs: <https://genkit.dev/docs/js>
+| Dev UI does not open at `:4000` | Port in use — `lsof -i :4000`; or open the URL manually |
+| `API key not valid` | `.env` not loaded — restart `npm run dev`; double-check `GEMINI_API_KEY` |
+| `npx genkit: command not found` | `npm install` did not finish — re-run it |
