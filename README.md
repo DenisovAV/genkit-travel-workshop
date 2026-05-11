@@ -15,17 +15,24 @@ Total: ~120 min, including ~10 min Q&A.
 
 ## How to use this repo during the workshop
 
-`main` holds the **finished** version. To follow along, start from the empty starter and switch branches as we go:
+`main` holds the **finished** version. To follow along live, clone the repo and switch to the starter:
 
 ```bash
-git checkout step-00-starter   # before we begin
-git checkout step-01-inference # after module 1
-git checkout step-02-tools     # after module 2
-git checkout step-03-multimodal # after module 3
-git checkout step-04-rag       # = main (final)
+git clone https://github.com/DenisovAV/genkit-travel-workshop.git
+cd genkit-travel-workshop
+git checkout step-00-starter
 ```
 
-Every branch carries a step-specific `README.md` that tells you exactly what to do, paste, and run for that module. If you fall behind at any point, just `git checkout step-NN-<name>` and you are caught up.
+After each module, jump to the matching checkpoint:
+
+```bash
+git checkout step-01-inference   # after module 1
+git checkout step-02-tools       # after module 2
+git checkout step-03-multimodal  # after module 3
+git checkout step-04-rag         # after module 4 (= main)
+```
+
+Every branch carries a **step-specific `README.md`** that tells you exactly what to do, paste, and run for that module. If you fall behind, just `git checkout step-NN-<name>` and you are caught up.
 
 ## Prerequisites
 
@@ -80,16 +87,22 @@ If you fall behind, every module doc ends with the **full file state** at that c
 └── docs/                      ← step-by-step module instructions
 ```
 
+Generated at runtime (gitignored):
+- `__db_cityGuides.json` — local vector store (after first `indexCityGuides` run)
+- `.genkit/` — Dev UI traces and telemetry
+- `.env` — your API key
+
 ## Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|
-| `genkit: command not found` | `npm install -g genkit-cli`, then restart your shell |
-| Dev UI does not open at `:4000` | Port already in use — `lsof -i :4000`; or open it manually in the browser |
+| `genkit: command not found` | The CLI is a `devDependency` — run it via `npx genkit ...` or `npm run dev`. Or install it globally: `npm install -g genkit-cli`. |
+| Dev UI does not open at `:4000` | Port already in use — `lsof -i :4000`; Genkit will pick the next free port if 4000 is taken, check the terminal output for the actual URL. |
 | `GoogleGenerativeAIFetchError: API key not valid` | `.env` not loaded — restart `npm run dev`; verify `GEMINI_API_KEY` value |
-| Module 4: `embedding quota exceeded` | Swap the embedder to `googleAI.embedder('text-embedding-004')` |
-| Module 4: stale index after editing guides | Stop the server, `rm -rf .genkit`, restart and re-run `indexCityGuides` |
+| Module 4: `embedding quota exceeded` | Swap the embedder to `googleAI.embedder('text-embedding-004')` in `src/index.ts` |
+| Module 4: stale index after editing guides | Stop the server, delete `__db_cityGuides.json` (in repo root) and the `.genkit/` folder, restart, re-run `indexCityGuides` |
 | Tool loop never terminates | Already guarded by `maxTurns: 5`; if you remove it, expect 10+ tool calls in pathological prompts |
+| Module 3/4: JSON parse error | Mitigated by `format: 'json', constrained: true`; if still flaky, switch to `googleAI.model('gemini-pro-latest')` |
 
 ## What we are NOT covering (links to read later)
 
