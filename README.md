@@ -1,101 +1,86 @@
-# Genkit Travel Workshop
+# Genkit Travel Workshop — Step 04: RAG (final)
 
-Build a Travel Planner with [Firebase Genkit](https://genkit.dev) in 2 hours.
-One growing flow — `planTripFlow` — picks up a new Genkit capability every module:
+You are on branch **`step-04-rag`** — identical to `main`. Module 4 is done; this is the complete travel planner.
 
-| Module | Capability | Added to `planTripFlow` |
-|-------:|------------|-------------------------|
-| 0 | Setup | Hello-flow + Dev UI tour |
-| 1 | Inference | `ai.generate` with a Zod output schema |
-| 2 | Tool calling | `getWeather`, `searchFlights` (mocked) |
-| 3 | Multimodal | Photo of a landmark → highlight |
-| 4 | RAG | Index local Markdown guides, augment with `docs` |
+## Branch map
 
-Total: ~120 min, including ~10 min Q&A.
+| Branch | After module |
+|--------|--------------|
+| `step-00-starter` | (setup only) |
+| `step-01-inference` | 1 — Zod structured output |
+| `step-02-tools` | 2 — tool calling |
+| `step-03-multimodal` | 3 — image input |
+| **`step-04-rag`** ← you are here | 4 — RAG (final state) |
 
-## How to use this repo during the workshop
+## What changed since step 03
 
-`main` holds the **finished** version. To follow along, start from the empty starter and switch branches as we go:
+1. **`devLocalVectorstore`** plugin registered with `gemini-embedding-001` as the embedder. Stores embeddings in a local file (`__db_cityGuides.json`, gitignored).
+2. **`indexCityGuides`** — a separate flow that chunks `src/data/*.md` by blank lines and writes them to the local index. Run it once per session.
+3. `planTripFlow` now does `ai.retrieve` before `ai.generate` and passes the retrieved chunks as the `docs` parameter — Genkit injects them into the prompt with the right framing.
+4. The system prompt tells the model to **prefer the guides** over its general knowledge and to admit ignorance when something is not in them.
 
-```bash
-git checkout step-00-starter   # before we begin
-git checkout step-01-inference # after module 1
-git checkout step-02-tools     # after module 2
-git checkout step-03-multimodal # after module 3
-git checkout step-04-rag       # = main (final)
-```
-
-Every branch carries a step-specific `README.md` that tells you exactly what to do, paste, and run for that module. If you fall behind at any point, just `git checkout step-NN-<name>` and you are caught up.
-
-## Prerequisites
-
-- **Node.js 20+**
-- A **free** Gemini API key — get one at <https://aistudio.google.com/apikey>
-- An editor with TypeScript support
-
-## Setup
+## Try it now
 
 ```bash
-# 1. Project deps (Genkit CLI is bundled as a devDependency)
-npm install
-
-# 2. API key
-cp .env.example .env
-# then paste your GEMINI_API_KEY into .env
-
-# 3. Start the dev server + Dev UI
 npm run dev
 ```
 
-> Optional: `npm install -g genkit-cli` to get the `genkit` command available everywhere — handy outside this project.
+**Step 1 — populate the index** (one time per session):
 
-The Developer UI opens at **<http://localhost:4000>**. The flow auto-reloads on file changes (`tsx --watch`).
+In the Dev UI, open `indexCityGuides`, run with input `null`. Expect `{ "count": 38 }` or so.
 
-## Walkthrough
+**Step 2 — run the full planner:**
 
-Each module has a self-contained doc in [`docs/`](./docs/). Follow them in order:
+```json
+{ "destination": "Lisbon", "days": 3 }
+```
 
-1. [00 — Setup & Dev UI tour](docs/00-setup.md)
-2. [01 — Inference & structured output](docs/01-inference.md)
-3. [02 — Tool calling](docs/02-tools.md)
-4. [03 — Multimodal input](docs/03-multimodal.md)
-5. [04 — RAG with local vector store](docs/04-rag.md)
-
-If you fall behind, every module doc ends with the **full file state** at that checkpoint — copy it into `src/index.ts` and you are back on track.
-
-## Repo layout
+In the trace you should now see:
 
 ```
-.
-├── README.md                  ← you are here
-├── package.json               ← all Genkit deps on "latest"
-├── tsconfig.json
-├── .env.example
-├── src/
-│   ├── index.ts               ← the only source file we touch
-│   └── data/
-│       ├── lisbon.md          ← guides for RAG (module 4)
-│       ├── barcelona.md
-│       └── sagrada-familia.jpg← landmark photo for multimodal (module 3)
-└── docs/                      ← step-by-step module instructions
+planTripFlow
+├─ retrieve (cityGuides) — 4 chunks with similarity scores
+└─ generate
+   ├─ tool: getWeather
+   ├─ tool: searchFlights
+   └─ final response
 ```
+
+The plan will reference **specific facts from `lisbon.md`** that the model could not have known on its own (street numbers, voucher codes, tram numbers). That is RAG working.
+
+**Step 3 — combine everything:**
+
+Run with a `landmarkPhoto` *and* a destination. The model will identify the landmark from the image, retrieve city guides for the destination, call the tools for weather and flights, and return a typed `TripPlan`.
+
+## Negative test
+
+Ask about something not in the guides (e.g. *"What is the Wi-Fi password at Pensão Amor?"*) — the model should say it does not know, instead of inventing.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---------|-----|
-| `genkit: command not found` | `npm install -g genkit-cli`, then restart your shell |
-| Dev UI does not open at `:4000` | Port already in use — `lsof -i :4000`; or open it manually in the browser |
-| `GoogleGenerativeAIFetchError: API key not valid` | `.env` not loaded — restart `npm run dev`; verify `GEMINI_API_KEY` value |
-| Module 4: `embedding quota exceeded` | Swap the embedder to `googleAI.embedder('text-embedding-004')` |
-| Module 4: stale index after editing guides | Stop the server, `rm -rf .genkit`, restart and re-run `indexCityGuides` |
-| Tool loop never terminates | Already guarded by `maxTurns: 5`; if you remove it, expect 10+ tool calls in pathological prompts |
+| `embedding quota exceeded` | Swap to `googleAI.embedder('text-embedding-004')` in `src/index.ts` |
+| Stale results after editing guides | Stop the server, delete `__db_cityGuides.json`, restart, re-run `indexCityGuides` |
+| `Skipping <hash> since it is already present` on re-index | This is normal — `dev-local-vectorstore` deduplicates by content hash |
+| JSON parse error under heavy load | Already mitigated by `format: 'json', constrained: true`; if still happening, try `gemini-pro-latest` |
 
-## What we are NOT covering (links to read later)
+## Full docs for this module
+
+[docs/04-rag.md](docs/04-rag.md)
+
+## What we did NOT cover (read later)
 
 - Deployment (`startFlowServer`, Cloud Run, Firebase Functions)
 - `.prompt` files for promptfile-based prompt management
 - Evaluation framework (`ai.evaluate`)
 - Multi-agent orchestration
+- Production-grade RAG: smarter chunking, persistent vector DBs (LanceDB, Pinecone, Vertex AI Vector Search), re-ranking
 
 Full docs: <https://genkit.dev/docs/js>
+
+## Going back to the start
+
+```bash
+git checkout step-00-starter
+```
