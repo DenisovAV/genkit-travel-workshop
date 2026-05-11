@@ -1,101 +1,50 @@
-# Genkit Travel Workshop
+# Genkit Travel Workshop — Step 01: Inference
 
-Build a Travel Planner with [Firebase Genkit](https://genkit.dev) in 2 hours.
-One growing flow — `planTripFlow` — picks up a new Genkit capability every module:
+You are on branch **`step-01-inference`**. Module 1 is done — `planTripFlow` now returns a typed `TripPlan` object validated by a Zod schema.
 
-| Module | Capability | Added to `planTripFlow` |
-|-------:|------------|-------------------------|
-| 0 | Setup | Hello-flow + Dev UI tour |
-| 1 | Inference | `ai.generate` with a Zod output schema |
-| 2 | Tool calling | `getWeather`, `searchFlights` (mocked) |
-| 3 | Multimodal | Photo of a landmark → highlight |
-| 4 | RAG | Index local Markdown guides, augment with `docs` |
+## Branch map
 
-Total: ~120 min, including ~10 min Q&A.
+| Branch | After module |
+|--------|--------------|
+| `step-00-starter` | (setup only) |
+| **`step-01-inference`** ← you are here | 1 — Zod structured output |
+| `step-02-tools` | 2 — tool calling |
+| `step-03-multimodal` | 3 — image input |
+| `step-04-rag` / `main` | 4 — RAG (final state) |
 
-## How to use this repo during the workshop
+## What changed since step 00
 
-`main` holds the **finished** version. To follow along, start from the empty starter and switch branches as we go:
+1. **`TripPlanSchema`** declared with Zod — destination, durationDays, 3–5 highlights, ≤5 packingTips.
+2. `planTripFlow` `outputSchema` is the schema itself, so the flow returns a typed object.
+3. `ai.generate({ ..., output: { schema } })` makes Genkit append schema instructions to the prompt and validate the response.
 
-```bash
-git checkout step-00-starter   # before we begin
-git checkout step-01-inference # after module 1
-git checkout step-02-tools     # after module 2
-git checkout step-03-multimodal # after module 3
-git checkout step-04-rag       # = main (final)
-```
+Tolerant constraint: we use `.min(3).max(5)` instead of `.length(3)` — rigid lengths cause occasional validation failures.
 
-Every branch carries a step-specific `README.md` that tells you exactly what to do, paste, and run for that module. If you fall behind at any point, just `git checkout step-NN-<name>` and you are caught up.
-
-## Prerequisites
-
-- **Node.js 20+**
-- A **free** Gemini API key — get one at <https://aistudio.google.com/apikey>
-- An editor with TypeScript support
-
-## Setup
+## Try it now
 
 ```bash
-# 1. Project deps (Genkit CLI is bundled as a devDependency)
-npm install
-
-# 2. API key
-cp .env.example .env
-# then paste your GEMINI_API_KEY into .env
-
-# 3. Start the dev server + Dev UI
 npm run dev
+# Dev UI → planTripFlow → run
 ```
 
-> Optional: `npm install -g genkit-cli` to get the `genkit` command available everywhere — handy outside this project.
+Input:
 
-The Developer UI opens at **<http://localhost:4000>**. The flow auto-reloads on file changes (`tsx --watch`).
-
-## Walkthrough
-
-Each module has a self-contained doc in [`docs/`](./docs/). Follow them in order:
-
-1. [00 — Setup & Dev UI tour](docs/00-setup.md)
-2. [01 — Inference & structured output](docs/01-inference.md)
-3. [02 — Tool calling](docs/02-tools.md)
-4. [03 — Multimodal input](docs/03-multimodal.md)
-5. [04 — RAG with local vector store](docs/04-rag.md)
-
-If you fall behind, every module doc ends with the **full file state** at that checkpoint — copy it into `src/index.ts` and you are back on track.
-
-## Repo layout
-
-```
-.
-├── README.md                  ← you are here
-├── package.json               ← all Genkit deps on "latest"
-├── tsconfig.json
-├── .env.example
-├── src/
-│   ├── index.ts               ← the only source file we touch
-│   └── data/
-│       ├── lisbon.md          ← guides for RAG (module 4)
-│       ├── barcelona.md
-│       └── sagrada-familia.jpg← landmark photo for multimodal (module 3)
-└── docs/                      ← step-by-step module instructions
+```json
+{ "destination": "Lisbon", "days": 3 }
 ```
 
-## Troubleshooting
+You get a JSON object with the right shape. Open the trace — the `generate` span has an **Output Schema** view showing the JSON Schema Genkit sent to the model.
 
-| Symptom | Fix |
-|---------|-----|
-| `genkit: command not found` | `npm install -g genkit-cli`, then restart your shell |
-| Dev UI does not open at `:4000` | Port already in use — `lsof -i :4000`; or open it manually in the browser |
-| `GoogleGenerativeAIFetchError: API key not valid` | `.env` not loaded — restart `npm run dev`; verify `GEMINI_API_KEY` value |
-| Module 4: `embedding quota exceeded` | Swap the embedder to `googleAI.embedder('text-embedding-004')` |
-| Module 4: stale index after editing guides | Stop the server, `rm -rf .genkit`, restart and re-run `indexCityGuides` |
-| Tool loop never terminates | Already guarded by `maxTurns: 5`; if you remove it, expect 10+ tool calls in pathological prompts |
+## Experiment
 
-## What we are NOT covering (links to read later)
+Add `config: { temperature: 0.9 }` to `ai.generate` and run twice. The highlights change dramatically. Drop it to `0.2` and they stabilize. That is the cheapest "LLMs are non-deterministic" demo.
 
-- Deployment (`startFlowServer`, Cloud Run, Firebase Functions)
-- `.prompt` files for promptfile-based prompt management
-- Evaluation framework (`ai.evaluate`)
-- Multi-agent orchestration
+## Full docs for this module
 
-Full docs: <https://genkit.dev/docs/js>
+[docs/01-inference.md](docs/01-inference.md) — read this if you want the long version.
+
+## Next
+
+```bash
+git checkout step-02-tools   # tool calling
+```
