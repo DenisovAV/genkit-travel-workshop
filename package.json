@@ -1,0 +1,25 @@
+{
+  "name": "genkit-travel-workshop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "2-hour Genkit workshop: build a travel planner that grows from plain inference to tools, multimodal, and RAG.",
+  "type": "module",
+  "scripts": {
+    "dev": "genkit start -- tsx --watch src/index.ts",
+    "build": "tsc",
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@genkit-ai/dev-local-vectorstore": "latest",
+    "@genkit-ai/google-genai": "latest",
+    "dotenv": "latest",
+    "genkit": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "genkit-cli": "latest",
+    "tsx": "latest",
+    "typescript": "latest"
+  }
+}
