@@ -39,6 +39,8 @@ In the Dev UI, open `planTripFlow` and run with:
 
 You should get a greeting string back, and a single `generate` span in **Traces**. If both work, you are ready for module 1.
 
+> **Tip:** `npm run dev` runs `tsx --watch`, so any edit to `src/index.ts` automatically restarts the flow process. Refresh the Dev UI tab if a flow disappears from the list.
+
 ## What is in `src/index.ts` right now
 
 Three things, no more:
@@ -46,6 +48,12 @@ Three things, no more:
 1. `genkit({...})` — the factory that wires the Google AI plugin and sets `gemini-flash-latest` as the default model.
 2. `ai.defineFlow` — wraps a function so the Dev UI can call it.
 3. `ai.generate` — the single inference primitive.
+
+## Next
+
+```bash
+git checkout step-01-inference   # add a Zod schema, return a typed object
+```
 
 ## Full step-by-step docs
 
