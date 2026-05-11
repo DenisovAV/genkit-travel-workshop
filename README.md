@@ -15,8 +15,10 @@ You are on branch **`step-01-inference`**. Module 1 is done — `planTripFlow` n
 ## What changed since step 00
 
 1. **`TripPlanSchema`** declared with Zod — destination, durationDays, 3–5 highlights, ≤5 packingTips.
-2. `planTripFlow` `outputSchema` is the schema itself, so the flow returns a typed object.
-3. `ai.generate({ ..., output: { schema } })` makes Genkit append schema instructions to the prompt and validate the response.
+2. `planTripFlow` `inputSchema` now takes **two fields** instead of one: `{ destination, days }`. The Dev UI form auto-updates.
+3. `planTripFlow` `outputSchema` is `TripPlanSchema` itself, so the flow returns a typed object instead of a free-form string.
+4. The prompt is now `Plan a ${days}-day trip to ${destination}.`
+5. `ai.generate({ ..., output: { schema } })` makes Genkit append schema instructions to the prompt and validate the response. If validation fails, `output` is `undefined` — we throw explicitly.
 
 Tolerant constraint: we use `.min(3).max(5)` instead of `.length(3)` — rigid lengths cause occasional validation failures.
 
