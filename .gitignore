@@ -6,3 +6,4 @@ __db_*.json
 *.log
 .DS_Store
 package-lock.json
+scripts/
