@@ -14,9 +14,10 @@ You are on branch **`step-02-tools`**. Module 2 is done — the model can now ca
 
 ## What changed since step 01
 
-1. **`ai.defineTool`** — `getWeather` and `searchFlights` are typed callable tools with Zod input/output schemas. Their `description` is the only thing the model sees about them — treat it as API documentation for an LLM.
-2. The flow's `ai.generate` now passes `tools: [getWeather, searchFlights]` and `maxTurns: 5` (cap on the tool-call loop).
-3. Prompt updated to invite the model to actually use them (mentions weather and a flight).
+1. **`ai.defineTool`** — `getWeather` and `searchFlights` are typed callable tools with Zod input/output schemas. Their `description` is the only thing the model sees about them — treat it as API documentation for an LLM. Bodies are mocked: weather has a hand-written city stub, flight search always returns the same two carriers.
+2. The flow's `ai.generate` now passes `tools: [getWeather, searchFlights]` and `maxTurns: 5` (cap on the tool-call loop — prevents runaway calls).
+3. Prompt updated to invite the model to actually use them: it now mentions the trip starts "from Berlin" and asks the model to "mention the weather and suggest a flight option". Without that prompt nudge the model has no reason to call tools.
+4. **`output: { format: 'json', constrained: true }`** — schema-aware decoding. Combining `tools` with `output.schema` makes Flash models occasionally produce malformed JSON; `constrained: true` asks Gemini for structured decoding and prevents parse errors.
 
 ## Try it now
 
