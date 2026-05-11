@@ -9,7 +9,7 @@ One growing flow — `planTripFlow` — picks up a new Genkit capability every m
 | 1 | Inference | `ai.generate` with a Zod output schema |
 | 2 | Tool calling | `getWeather`, `searchFlights` (mocked) |
 | 3 | Multimodal | Photo of a landmark → highlight |
-| 4 | RAG | Index local Markdown guides, augment with `docs` |
+| 4 | RAG | Index local Markdown guides via `indexCityGuides`, then augment `planTripFlow` with `docs` |
 
 Total: ~120 min, including ~10 min Q&A.
 
@@ -69,6 +69,8 @@ Each module has a self-contained doc in [`docs/`](./docs/). Follow them in order
 5. [04 — RAG with local vector store](docs/04-rag.md)
 
 If you fall behind, every module doc ends with the **full file state** at that checkpoint — copy it into `src/index.ts` and you are back on track.
+
+> **Module 4 quirk:** the final state exposes **two** flows. Run `indexCityGuides` **once** before running `planTripFlow`, otherwise retrieval returns an empty set and the trip plan loses its RAG context.
 
 ## Repo layout
 
